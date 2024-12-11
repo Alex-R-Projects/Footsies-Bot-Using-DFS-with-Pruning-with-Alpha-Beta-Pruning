@@ -3,6 +3,8 @@ import win32com.client
 import subprocess
 import random
 import time
+import matplotlib.pyplot as plt
+
 
 # Initialize the keyboard controller
 keyboard = Controller()
@@ -14,7 +16,7 @@ KEY_MAPPING = {
     "space": Key.space  # Attack
 }
 
-# Frame data for moves with attributes affecting decision-making
+# Frame data for moves with attributes affecting decision-making 
 FRAME_DATA = {
     "neutral_attack": {
         "state": "idle",
@@ -61,6 +63,14 @@ FRAME_DATA = {
     }
 }
 
+# Metrics storage
+performance_data = {
+    "average_depth_explored": [],
+    "branches_pruned": [],
+    "computation_time": []
+}
+
+
 # Global flags and constants
 game_starting = False
 KEYPRESS_DURATION = 0.1  # Duration for which keys are held down (in seconds)
@@ -79,7 +89,7 @@ def focus_game_window():
 # Function to launch the game
 def launch_game():
     try:
-        game_process = subprocess.Popen(r"C:\Users\mrale\OneDrive\Desktop\FOOTSIES_v1_5_0\FOOTSIES.exe", shell=True)
+        game_process = subprocess.Popen(r"FOOTSIES_v1_5_0\FOOTSIES.exe", shell=True)
         if game_process is None:
             raise ValueError("Failed to start the game process.")
         print("Game launched.")
@@ -133,32 +143,43 @@ def evaluation_function(move_name, last_move, consecutive_moves):
 
 # Depth-First Search (DFS) with Alpha-Beta Pruning
 def dfs_with_pruning(node, depth, is_maximizing, alpha, beta, last_move, consecutive_moves):
+    start_time = time.time()  # Start timing computation
+    branches_pruned = 0
+    depths = []
+
     if not node.children:
-        return evaluation_function(node.name, last_move, consecutive_moves), node
+        return evaluation_function(node.name, last_move, consecutive_moves), node, 1, branches_pruned
 
     best_node = None
     if is_maximizing:
         max_eval = float('-inf')
         for child in node.children:
-            eval, _ = dfs_with_pruning(child, depth + 1, False, alpha, beta, last_move, consecutive_moves)
+            eval, _, child_depth, pruned = dfs_with_pruning(child, depth + 1, False, alpha, beta, last_move, consecutive_moves)
+            depths.append(child_depth)
+            branches_pruned += pruned
             if eval > max_eval:
                 max_eval = eval
                 best_node = child
             alpha = max(alpha, eval)
             if beta <= alpha:
+                branches_pruned += 1
                 break
-        return max_eval, best_node
+        return max_eval, best_node, max(depths, default=0) + 1, branches_pruned
     else:
         min_eval = float('inf')
         for child in node.children:
-            eval, _ = dfs_with_pruning(child, depth + 1, True, alpha, beta, last_move, consecutive_moves)
+            eval, _, child_depth, pruned = dfs_with_pruning(child, depth + 1, True, alpha, beta, last_move, consecutive_moves)
+            depths.append(child_depth)
+            branches_pruned += pruned
             if eval < min_eval:
                 min_eval = eval
                 best_node = child
             beta = min(beta, eval)
             if beta <= alpha:
+                branches_pruned += 1
                 break
-        return min_eval, best_node
+        return min_eval, best_node, max(depths, default=0) + 1, branches_pruned
+  
 
 # Function to perform actions
 def perform_action(action):
@@ -207,6 +228,29 @@ def on_key_press(key):
 
 # Decision tree initialization
 tree = create_tree_for_attack()
+# Save and plot performance metrics
+def save_performance_plot():
+    fig, ax = plt.subplots(3, 1, figsize=(10, 15))
+    
+    ax[0].plot(performance_data["average_depth_explored"], label="Avg Depth Explored")
+    ax[0].set_title("Average Depth Explored")
+    ax[0].set_xlabel("Move")
+    ax[0].set_ylabel("Depth")
+
+    ax[1].plot(performance_data["branches_pruned"], label="Branches Pruned")
+    ax[1].set_title("Branches Pruned")
+    ax[1].set_xlabel("Move")
+    ax[1].set_ylabel("Count")
+
+    ax[2].plot(performance_data["computation_time"], label="Computation Time")
+    ax[2].set_title("Computation Time")
+    ax[2].set_xlabel("Move")
+    ax[2].set_ylabel("Seconds")
+
+    plt.tight_layout()
+    plt.savefig(r"C:\Users\mrale\Desktop\performance_metrics.png")
+    plt.show()
+    print("Performance metrics plot saved to desktop.")
 
 # Main loop
 def main():
@@ -233,12 +277,18 @@ def main():
 
             current_time = time.time()
 
-            # Ensure periodic movement
             if current_time - last_action_time >= ACTION_COOLDOWN:
-                optimize_value, best_node = dfs_with_pruning(
+                optimize_value, best_node, depth_explored, branches_pruned = dfs_with_pruning(
                     tree, depth=0, is_maximizing=True, alpha=float('-inf'), beta=float('inf'),
                     last_move=last_move, consecutive_moves=consecutive_moves
                 )
+                computation_time = time.time() - current_time  # Time for this decision
+
+                # Record performance metrics
+                performance_data["average_depth_explored"].append(depth_explored)
+                performance_data["branches_pruned"].append(branches_pruned)
+                performance_data["computation_time"].append(computation_time)
+
                 selected_move = best_node.name
 
                 # Update consecutive move tracking
@@ -256,7 +306,11 @@ def main():
     finally:
         if game_process.poll() is None:
             game_process.terminate()
+
+        # Save plot
+        save_performance_plot()
         print("Bot terminated.")
+
 
 if __name__ == "__main__":
     main()
