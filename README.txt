@@ -23,6 +23,16 @@ How to download and install FOOTSIES:
 For this program, the game should run once upon the execution of this program
 
 
+Instructions:
+1. Run the program
+2. Once the game is opened, click the desired mode: Player vs Player, Player vs CPU
+3. Press [ENTER] whenever you are ready for the bot to start
+
+* In the case you wish to play against our bot, you would be Player 2. Our bot takes Player 1 always. *
+**** Player 2 controls are the arrow keys to move, and [SHIFT] to attack ****
+
+Further instructions, and mechanics can be found within the game itself under the settings.
+
 Required libraries:
 
 1. pynput:
