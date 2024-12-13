@@ -36,7 +36,9 @@ The rest of the libraries within the source code are standard within python. It 
 These can be installed by a pip install in your machine's command prompt using: 
 pip install [library]
 
-IMPORTANT: Make sure the game "FOOTSIES" is available on your computer, and the file path is accurate on the launch_game() function.
+IMPORTANT: Make sure the game "FOOTSIES" is available on your computer, and the file path is accurate on the launch_game() function. 
+
+Its is recommended that you run this program under python 3.8 or above.
 
 
 
