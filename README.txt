@@ -3,6 +3,8 @@ AI Bot for the game "FOOTSIES" by HiFight
 This program seeks to implement a bot that can play against an opponent (CPU or Human) in the game FOOTSIES. The goal is to use the Depth-First Search with pruning in order to accomplish this while making the most rational decisions. 
 In order to make sure the bot behaves rational we are using the framedata available to us as well as the x-distances for the bot and opponent to eliminate certain game states.
 
+Note: The main.py file is where the bot able to perform the best out of the three algorithms in the repo.
+
 Note: This bot is omnipotent, and can make non optimal decisions, nor does this bot guarantee a win by any means. This project was created for educational purposes and not meant to promote cheating in anyway shape or form.
 
 What is FOOTSIES?
